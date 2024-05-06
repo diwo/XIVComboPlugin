@@ -190,78 +190,8 @@ public enum CustomComboPreset
     // ====================================================================================
     #region BARD
 
-    [CustomComboInfo("Heavy Shot into Straight Shot", "Replace Heavy Shot with Straight Shot/Refulgent Arrow when available.", BRD.JobID)]
-    BardStraightShotUpgradeFeature = 2302,
-
-    [CustomComboInfo("Iron Jaws Feature", "Replace Iron Jaws with Caustic Bite/Stormbite depending on which is not present on the target.", BRD.JobID)]
-    BardIronJawsFeature = 2308,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Pre Iron Jaws Feature", "Replace Iron Jaws with Caustic Bite/Stormbite depending on the duration when Iron Jaws is not available.", BRD.JobID)]
-    BardPreIronJawsFeature = 2303,
-
-    [CustomComboInfo("Burst Shot/Quick Nock into Apex Arrow", "Replace Burst Shot and Quick Nock with Apex Arrow when gauge is full.", BRD.JobID)]
-    BardApexFeature = 2304,
-
-    [CustomComboInfo("Quick Nock into Shadowbite", "Replace Quick Nock with Shadowbite when available.", BRD.JobID)]
-    BardShadowbiteFeature = 2305,
-
-    [ParentCombo(BardShadowbiteFeature)]
-    [CustomComboInfo("A Barrage of Shadowbites", "Replace Quick Nock with Barrage when off cooldown and Shadowbite is available.", BRD.JobID)]
-    BardShadowbiteBarrageFeature = 2321,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Perfect Bloodletter Feature", "Replace Bloodletter with Pitch Perfect when Repertoire charges are full.", BRD.JobID)]
-    BardPerfectBloodletterFeature = 2315,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Expiring Perfect Bloodletter Feature", "Replace Bloodletter with Pitch Perfect when Wanderers Minuet has less than 2.5 seconds remaining and atleast one Repertoire charge.", BRD.JobID)]
-    BardExpiringPerfectBloodletterFeature = 2316,
-
-    [SecretCustomCombo]
-    [ConflictingCombos(BardBloodRainFeature)]
-    [CustomComboInfo("Bloodletter Feature", "Replace Bloodletter with Empyreal Arrow and Sidewinder depending on which is available.", BRD.JobID)]
-    BardBloodletterFeature = 2306,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Rain of Death Feature", "Replace Rain of Death with Empyreal Arrow and Sidewinder depending on which is available.", BRD.JobID)]
-    BardRainOfDeathFeature = 2307,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Perfect Rain of Death Feature", "Replace Rain of Death with Pitch Perfect when Repertoire charges are full.", BRD.JobID)]
-    BardPerfectRainOfDeathFeature = 2318,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Expiring Perfect Rain of Death Feature", "Replace Rain of Death with Pitch Perfect when Wanderers Minuet has less than 2.5 seconds remaining and atleast one Repertoire charge.", BRD.JobID)]
-    BardExpiringPerfectRainOfDeathFeature = 2319,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Empyreal Arrow Feature", "Replace Empyreal Arrow with Sidewinder depending on which is available.", BRD.JobID)]
-    BardEmpyrealArrowFeature = 2320,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Sidewinder Feature", "Replace Sidewinder with Empyreal Arrow depending on which is available.", BRD.JobID)]
-    BardSidewinderFeature = 2309,
-
-    [CustomComboInfo("Radiant Voice Feature", "Replace Radiant Finale with Battle Voice if Battle Voice is available.", BRD.JobID)]
-    BardRadiantVoiceFeature = 2310,
-
-    [CustomComboInfo("Radiant Strikes Feature", "Replace Radiant Finale with Raging Strikes if Raging Strikes is available.\nThis takes priority over Battle Voice if Radiant Voice is enabled.", BRD.JobID)]
-    BardRadiantStrikesFeature = 2311,
-
-    [CustomComboInfo("Barrage Feature", "Replace Barrage with Straight Shot if you have Straight Shot Ready (unless Shadowbite is ready).", BRD.JobID)]
-    BardBarrageFeature = 2312,
-
-    [SecretCustomCombo]
-    [ConflictingCombos(BardBloodletterFeature)]
-    [CustomComboInfo("Bloodletter to Rain of Death", "Replace Bloodletter with Rain of Death if there are no self-applied DoTs on your target.", BRD.JobID)]
-    BardBloodRainFeature = 2313,
-
-    [CustomComboInfo("Wanderer's Minuet Semi-Fix", "Turns Peloton into Wanderer's Minuet to Pitch Perfect while you have a target, letting you use it regardless of whatever other bards are doing.", BRD.JobID)]
-    BardWanderersPitchPerfectFeature = 2314,
-
-    [CustomComboInfo("Cycling Song Feature", "Replace Mage's Ballad with Wanderer's Minuet, Mage's Ballad, and Army's Paeon, while the previous is on cooldown.", BRD.JobID)]
-    BardCyclingSongFeature = 2317,
+    [CustomComboInfo("Bard one button combo", "Bard one button combo", BRD.JobID)]
+    BardOneButton = (BRD.JobID * 10000) + 1,
 
     #endregion
     // ====================================================================================

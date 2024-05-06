@@ -44,6 +44,9 @@ internal class Service
     [PluginService]
     internal static IDalamudPluginInterface Interface { get; private set; } = null!;
 
+    [PluginService]
+    internal static IPartyList PartyList { get; private set; } = null!;
+
     /// <summary>
     /// Gets the Dalamud buddy list.
     /// </summary>
