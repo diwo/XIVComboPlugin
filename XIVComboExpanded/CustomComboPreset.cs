@@ -275,47 +275,8 @@ public enum CustomComboPreset
     // ====================================================================================
     #region MACHINIST
 
-    [CustomComboInfo("(Heated) Shot Combo", "Replace Clean Shot with its combo chain.", MCH.JobID)]
-    MachinistMainCombo = 3101,
-
-    [ParentCombo(MachinistMainCombo)]
-    [CustomComboInfo("Hypercharge Combo", "Replace Clean Shot combo with Heat Blast while overheated.", MCH.JobID)]
-    MachinistHypercomboFeature = 3108,
-
-    [CustomComboInfo("Spread Shot Heat", "Replace Spread Shot with Auto Crossbow when overheated.", MCH.JobID)]
-    MachinistSpreadShotFeature = 3102,
-
-    [CustomComboInfo("Hypercharge Feature", "Replace Heat Blast and Auto Crossbow with Hypercharge when not overheated.", MCH.JobID)]
-    MachinistOverheatFeature = 3103,
-
-    [CustomComboInfo("Hyperfire Feature", "Replace Hypercharge with Wildfire if available and you have a target.", MCH.JobID)]
-    MachinistHyperfireFeature = 3109,
-
-    [CustomComboInfo("Overdrive Feature", "Replace Rook Autoturret and Automaton Queen with Overdrive while active.", MCH.JobID)]
-    MachinistOverdriveFeature = 3104,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Gauss Round / Ricochet Feature", "Replace Gauss Round and Ricochet with one or the other depending on which has more charges.", MCH.JobID)]
-    MachinistGaussRoundRicochetFeature = 3105,
-
-    [SecretCustomCombo]
-    [ParentCombo(MachinistGaussRoundRicochetFeature)]
-    [CustomComboInfo("Gauss Round / Ricochet Overheat Option", "Replace Gauss Round and Ricochet with one or the other only while overheated.", MCH.JobID)]
-    MachinistGaussRoundRicochetFeatureOption = 3110,
-
-    [SecretCustomCombo]
-    [ConflictingCombos(MachinistHotShotChainsawFeature)]
-    [CustomComboInfo("Hot Shot (Air Anchor) / Drill / Chainsaw Feature", "Replace Hot Shot (Air Anchor), Drill, and Chainsaw with whichever is available.", MCH.JobID)]
-    MachinistHotShotDrillChainsawFeature = 3106,
-
-    [SecretCustomCombo]
-    [ConflictingCombos(MachinistHotShotDrillChainsawFeature)]
-    [CustomComboInfo("Hot Shot (Air Anchor) / Chainsaw Feature", "Replace Hot Shot (Air Anchor) and Chainsaw with whichever is available.", MCH.JobID)]
-    MachinistHotShotChainsawFeature = 3107,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Bioblaster / Chainsaw Feature", "Replace Bioblaster with whichever of Bioblaster or Chainsaw is available.", MCH.JobID)]
-    MachinistBioblasterChainsawFeature = 3111,
+    [CustomComboInfo("Machinist one button combo", "Machinist one button combo", MCH.JobID)]
+    MachinistOneButton = (MCH.JobID * 10000) + 1,
 
     #endregion
     // ====================================================================================
