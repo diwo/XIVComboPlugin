@@ -611,49 +611,8 @@ public enum CustomComboPreset
     // ====================================================================================
     #region PALADIN
 
-    [CustomComboInfo("Royal Authority Combo", "Replace Royal Authority with its combo chain.", PLD.JobID)]
-    PaladinRoyalAuthorityCombo = 1902,
-
-    [ParentCombo(PaladinRoyalAuthorityCombo)]
-    [CustomComboInfo("Royal Authority Divine Might Feature", "Replace Royal Authority with Holy Spirit when Divine Might would overcap.", PLD.JobID)]
-    PaladinRoyalAuthorityDivineMightFeature = 1912,
-
-    [ParentCombo(PaladinRoyalAuthorityCombo)]
-    [CustomComboInfo("Royal Authority Fight or Flight Feature", "Replace Royal Authority with Holy Spirit during Fight or Flight when Divine Might is active.", PLD.JobID)]
-    PaladinRoyalAuthorityFightOrFlightFeature = 1915,
-
-    [ParentCombo(PaladinRoyalAuthorityCombo)]
-    [CustomComboInfo("Royal Authority Atonement Feature", "Replace Royal Authority with Atonement, Supplication & Sepulchre when under the effect of the corresponding buffs.", PLD.JobID)]
-    PaladinRoyalAuthorityAtonementComboFeature = 1903,
-
-    [CustomComboInfo("Prominence Combo", "Replace Prominence with its combo chain.", PLD.JobID)]
-    PaladinProminenceCombo = 1904,
-
-    [ParentCombo(PaladinProminenceCombo)]
-    [CustomComboInfo("Prominence Divine Might Feature", "Replace Prominence with Holy Circle when Divine Might is active.", PLD.JobID)]
-    PaladinProminenceDivineMightFeature = 1913,
-
-    [CustomComboInfo("Requiescat Fight or Flight Feature", "Replace Requiescat with Fight or Flight when off cooldown or if it will be ready sooner.", PLD.JobID)]
-    PaladinRequiescatFightOrFlightFeature = 1914,
-
-    [CustomComboInfo("Requiescat Confiteor", "Replace Requiescat with Confiteor and combo chain while under the effect of Requiescat, and then with Holy Spirit if there are remaining charges.", PLD.JobID)]
-    PaladinRequiescatCombo = 1905,
-
-    [CustomComboInfo("Fight or Flight Goring Blade Feature", "Replace Fight or Flight with Goring Blade while Fight or Flight is active.  Also applies to Requiescat if the Requiescat Fight or Flight Feature is enabled.", PLD.JobID)]
-    PaladinFightOrFlightGoringBladeFeature = 1911,
-
-    [CustomComboInfo("Confiteor Feature", "Replace Holy Spirit/Circle with Confiteor while under the effect of Requiescat.", PLD.JobID)]
-    PaladinConfiteorFeature = 1907,
-
-    [CustomComboInfo("Holy Spirit Level Sync", "Replace Holy Spirit with Shield Lob when below level 64 in synced content.", PLD.JobID)]
-    PaladinHolySpiritLevelSyncFeature = 1916,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Scornful Spirits Feature", "Replace Spirits Within/Expiacion and Circle of Scorn with whichever is available soonest.", PLD.JobID)]
-    PaladinScornfulSpiritsFeature = 1908,
-
-    [CustomComboInfo("Shields on your Feet Feature", "Replace Shield Bash with Low Blow when available.", PLD.JobID)]
-    PaladinShieldBashFeature = 1910,
+    [CustomComboInfo("Paladin one button combo", "Paladin one button combo", PLD.JobID)]
+    PaladinOneButton = (PLD.JobID * 10000) + 1,
 
     #endregion
     // ====================================================================================

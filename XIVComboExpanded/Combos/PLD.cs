@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace XIVComboExpandedPlugin.Combos;
 
 internal static class PLD
@@ -39,7 +43,7 @@ internal static class PLD
         public const ushort
             FightOrFlight = 76,
             Requiescat = 1368,
-            SwordOath = 1902,
+            AtonementReady = 1902,
             DivineMight = 2673,
             ConfiteorReady = 3019,
             SupplicationReady = 3827,
@@ -78,311 +82,390 @@ internal static class PLD
             BladeOfFaith = 90,
             BladeOfTruth = 90,
             BladeOfValor = 90,
+            Imperator = 96,
             BladeOfHonor = 100;
     }
 }
 
 internal abstract class PaladinCombo : CustomCombo
 {
-    protected bool HasMp(uint spell)
+    [Flags]
+    protected enum GetActionOptions
     {
-        int cost;
-        switch (spell)
+        None = 0,
+        MultiTarget = 1 << 1,
+        DelayBurst = 1 << 2,
+        RestoreMP = 1 << 3,
+    }
+
+    protected static uint GetRotationAction(uint lastComboMove, float comboTime, byte level, GetActionOptions options)
+    {
+        if (options.HasFlag(GetActionOptions.RestoreMP))
         {
-            case PLD.Clemency:
-                cost = 4000;
-                break;
-            case PLD.HolySpirit:
-            case PLD.HolyCircle:
-            case PLD.Confiteor:
-            case PLD.BladeOfFaith:
-            case PLD.BladeOfTruth:
-            case PLD.BladeOfValor:
-                cost = 2000;
-                break;
-            default:
-                cost = 0;
-                break;
+            if (options.HasFlag(GetActionOptions.MultiTarget) && level >= PLD.Levels.Prominence)
+                return GetMultiTargetRestoreMPAction(lastComboMove, comboTime);
+
+            return GetSingleTargetRestoreMPAction(lastComboMove, comboTime);
         }
+
+        var weaveAction = GetWeaveAction(lastComboMove, comboTime, level, options);
+        if (weaveAction > 0)
+            return weaveAction;
+
+        return GetGcdAction(lastComboMove, comboTime, level, options);
+    }
+
+    protected static bool HasMp(uint spell)
+    {
+        var cost = spell switch
+        {
+            PLD.Clemency => 4000,
+            PLD.HolySpirit or PLD.HolyCircle or PLD.Confiteor or PLD.BladeOfFaith or PLD.BladeOfTruth or PLD.BladeOfValor => 2000,
+            _ => 0,
+        };
 
         if (LocalPlayer?.Level >= PLD.Levels.DivineMagicMastery)
             cost /= 2;
 
         return LocalPlayer?.CurrentMp >= cost;
     }
-}
 
-internal class PaladinRoyalAuthority : PaladinCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.PldAny;
-
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
+    private static bool HasMpForConfiteorCombo()
     {
-        if (actionID == PLD.RageOfHalone || actionID == PLD.RoyalAuthority)
+        if (LocalPlayer?.Level >= 90)
+            return LocalPlayer?.CurrentMp >= 4000;
+
+        return HasMp(PLD.Confiteor);
+    }
+
+    private static uint GetWeaveAction(uint lastComboMove, float comboTime, byte level, GetActionOptions options)
+    {
+        if (options.HasFlag(GetActionOptions.DelayBurst) && !IsFightOrFlightUsed())
+            return 0;
+
+        if (Gcd() < 0.6)
+            return 0;
+
+        if (level >= PLD.Levels.FightOrFlight && CanWeaveWithoutClip(PLD.FightOrFlight))
         {
-            // During FoF, prioritize the higher-potency Divine Might cast over Atonement and the normal combo chain
-            if (IsEnabled(CustomComboPreset.PaladinRoyalAuthorityFightOrFlightFeature))
+            if (level < PLD.Levels.Requiescat || IsActionInRange(PLD.Requiescat) || level >= PLD.Levels.Imperator)
+                return PLD.FightOrFlight;
+        }
+
+        if (level >= PLD.Levels.Requiescat && CanWeaveWithoutClip(PLD.Requiescat))
+        {
+            if (IsOnCooldown(PLD.FightOrFlight) && GetCooldown(PLD.FightOrFlight).CooldownElapsed < 8)
             {
-                if (HasEffect(PLD.Buffs.FightOrFlight) && HasEffect(PLD.Buffs.DivineMight))
-                {
-                    if (level >= PLD.Levels.HolySpirit && this.HasMp(PLD.HolySpirit))
-                        return PLD.HolySpirit;
-                }
-            }
-
-            if (IsEnabled(CustomComboPreset.PaladinRoyalAuthorityAtonementComboFeature))
-            {
-                if (level >= PLD.Levels.Atonement && lastComboMove != PLD.FastBlade && lastComboMove != PLD.RiotBlade)
-                {
-                    if (HasEffect(PLD.Buffs.SwordOath))
-                    {
-                        return PLD.Atonement;
-                    }
-
-                    if (HasEffect(PLD.Buffs.SupplicationReady))
-                    {
-                        return PLD.Supplication;
-                    }
-
-                    if (HasEffect(PLD.Buffs.SepulchreReady))
-                    {
-                        return PLD.Sepulchre;
-                    }
-                }
-            }
-
-            if (IsEnabled(CustomComboPreset.PaladinRoyalAuthorityCombo))
-            {
-                if (comboTime > 0)
-                {
-                    if (lastComboMove == PLD.RiotBlade && level >= PLD.Levels.RageOfHalone)
-                    {
-                        if (IsEnabled(CustomComboPreset.PaladinRoyalAuthorityDivineMightFeature))
-                        {
-                            if (HasEffect(PLD.Buffs.DivineMight))
-                            {
-                                if (level >= PLD.Levels.HolySpirit && this.HasMp(PLD.HolySpirit))
-                                    return PLD.HolySpirit;
-                            }
-                        }
-
-                        // Royal Authority
-                        return OriginalHook(PLD.RageOfHalone);
-                    }
-
-                    if (lastComboMove == PLD.FastBlade && level >= PLD.Levels.RiotBlade)
-                        return PLD.RiotBlade;
-                }
-
-                return PLD.FastBlade;
+                if (level >= PLD.Levels.Imperator || IsActionInRange(PLD.Requiescat))
+                    return OriginalHook(PLD.Requiescat);
             }
         }
 
-        return actionID;
+        if (HasEffect(PLD.Buffs.BladeOfHonorReady))
+            return PLD.BladeOfHonor;
+
+        if (level >= PLD.Levels.SpiritsWithin && CanWeaveWithoutClip(PLD.SpiritsWithin) && IsActionInRange(PLD.SpiritsWithin))
+            return OriginalHook(PLD.SpiritsWithin);
+
+        if (level >= PLD.Levels.CircleOfScorn && CanWeaveWithoutClip(PLD.CircleOfScorn) && IsTargetInRadius(4))
+            return PLD.CircleOfScorn;
+
+        return 0;
     }
-}
 
-internal class PaladinProminence : PaladinCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.PaladinProminenceCombo;
-
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
+    protected static uint GetGcdAction(uint lastComboMove, float comboTime, byte level, GetActionOptions options)
     {
-        if (actionID == PLD.Prominence)
+        if (options.HasFlag(GetActionOptions.MultiTarget))
+            return GetMultiTargetGcdAction(lastComboMove, comboTime, level, options);
+
+        var action = GetSingleTargetGcdAction(lastComboMove, comboTime, level, options);
+        if (action == 0)
+            action = GetSingleTargetGcdAction(lastComboMove, comboTime, level, options, ignoreRangeCheck: true);
+
+        return action;
+    }
+
+    private static uint GetSingleTargetGcdAction(uint lastComboMove, float comboTime, byte level, GetActionOptions options, bool ignoreRangeCheck = false)
+    {
+        var expiringAction = GetExpiringGcdAction();
+        if (expiringAction > 0)
         {
-            // During FoF, prioritize the higher-potency Divine Might cast over the normal combo chain
-            if (IsEnabled(CustomComboPreset.PaladinProminenceDivineMightFeature))
-            {
-                if (HasEffect(PLD.Buffs.FightOrFlight) && HasEffect(PLD.Buffs.DivineMight))
-                {
-                    if (level >= PLD.Levels.HolyCircle && this.HasMp(PLD.HolyCircle))
-                        return PLD.HolyCircle;
-                }
-            }
-
-            if (comboTime > 0)
-            {
-                if (lastComboMove == PLD.TotalEclipse && level >= PLD.Levels.Prominence)
-                {
-                    if (IsEnabled(CustomComboPreset.PaladinProminenceDivineMightFeature))
-                    {
-                        if (HasEffect(PLD.Buffs.DivineMight))
-                        {
-                            if (level >= PLD.Levels.HolyCircle && this.HasMp(PLD.HolyCircle))
-                                return PLD.HolyCircle;
-                        }
-                    }
-
-                    return PLD.Prominence;
-                }
-            }
-
-            return PLD.TotalEclipse;
+            if (HasMp(expiringAction) && (IsActionInRange(expiringAction) || ignoreRangeCheck))
+                return expiringAction;
         }
 
-        return actionID;
-    }
-}
+        var replacedConfiteor = OriginalHook(PLD.Confiteor);
+        var bladeCombo = replacedConfiteor != PLD.Confiteor ? replacedConfiteor : 0;
+        var useBladeCombo = HasEffect(PLD.Buffs.ConfiteorReady) || bladeCombo > 0;
 
-internal class PaladinHolySpiritHolyCircle : PaladinCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.PaladinConfiteorFeature;
+        var atonementComboReady = HasEffect(PLD.Buffs.AtonementReady) || HasEffect(PLD.Buffs.SupplicationReady) || HasEffect(PLD.Buffs.SepulchreReady);
+        var atonementCombo = OriginalHook(PLD.Atonement);
 
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
-    {
-        if (actionID == PLD.HolySpirit || actionID == PLD.HolyCircle)
+        if (HasEffect(PLD.Buffs.FightOrFlight))
         {
-            if (level >= PLD.Levels.Confiteor)
+            if (options.HasFlag(GetActionOptions.DelayBurst))
             {
-                var original = OriginalHook(PLD.Confiteor);
-                if (original != PLD.Confiteor)
-                    return original;
-
-                if (HasEffect(PLD.Buffs.ConfiteorReady))
-                    return PLD.Confiteor;
-            }
-        }
-
-        return actionID;
-    }
-}
-
-internal class PaladinHolySpirit : PaladinCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.PaladinHolySpiritLevelSyncFeature;
-
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
-    {
-        if (actionID == PLD.HolySpirit && level < PLD.Levels.HolySpirit)
-          return PLD.ShieldLob;
-        return actionID;
-    }
-}
-
-internal class PaladinFightOrFlight : PaladinCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.PldAny;
-
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
-    {
-        if (actionID == PLD.FightOrFlight)
-        {
-            if (IsEnabled(CustomComboPreset.PaladinFightOrFlightGoringBladeFeature))
-            {
-                if (HasEffect(PLD.Buffs.GoringBladeReady))
-                {
+                if (HasEffect(PLD.Buffs.GoringBladeReady) && (IsActionInRange(PLD.GoringBlade) || ignoreRangeCheck))
                     return PLD.GoringBlade;
-                }
+
+                if (HasEffect(PLD.Buffs.SepulchreReady) && (IsActionInRange(PLD.Sepulchre) || ignoreRangeCheck))
+                    return PLD.Sepulchre;
+
+                if (HasEffect(PLD.Buffs.SupplicationReady) && (IsActionInRange(PLD.Supplication) || ignoreRangeCheck))
+                    return PLD.Supplication;
+
+                if (HasEffect(PLD.Buffs.AtonementReady) && (IsActionInRange(PLD.Atonement) || ignoreRangeCheck))
+                    return PLD.Atonement;
             }
-        }
 
-        return actionID;
-    }
-}
+            if (HasEffect(PLD.Buffs.ConfiteorReady) && HasMpForConfiteorCombo())
+                return PLD.Confiteor;
 
-internal class PaladinRequiescat : PaladinCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.PldAny;
+            if (bladeCombo > 0 && HasMp(bladeCombo))
+                return bladeCombo;
 
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
-    {
-        if (actionID == PLD.Requiescat || actionID == PLD.Imperator)
-        {
-            if (IsEnabled(CustomComboPreset.PaladinRequiescatCombo))
+            if (HasEffect(PLD.Buffs.GoringBladeReady) && (IsActionInRange(PLD.GoringBlade) || ignoreRangeCheck))
+                return PLD.GoringBlade;
+
+            if (HasEffect(PLD.Buffs.Requiescat) && HasMp(PLD.HolySpirit) && !useBladeCombo)
+                return PLD.HolySpirit;
+
+            if (HasEffect(PLD.Buffs.SepulchreReady) && (IsActionInRange(PLD.Sepulchre) || ignoreRangeCheck))
+                return PLD.Sepulchre;
+
+            if (HasEffect(PLD.Buffs.SupplicationReady) && (IsActionInRange(PLD.Supplication) || ignoreRangeCheck))
+                return PLD.Supplication;
+
+            if (!options.HasFlag(GetActionOptions.DelayBurst))
             {
-                // Prioritize Goring Blade over the Confiteor combo.  While Goring Blade deals less damage (700p) than
-                // most of the Confiteor combo (900p -> 700p -> 800p -> 900p), Goring Blade uniquely requires melee
-                // range to cast, while the entire Confiteor combo chain does not.  Since Requiescat also requires
-                // melee range to cast, the most reliable time that the player will be in melee range during the Req
-                // buff is immediately following the usage of Req.  This minimizes potential losses and potential
-                // cooldown drift if the player is forced out of melee range during the Confiteor combo and is unable
-                // to return to melee range by the time it is completed.
-                //
-                // Since Goring Blade, the entire Confiteor combo, *and* one additional GCD (typically Holy Spirit) fits
-                // within even the shortest of party buffs (15s ones like Battle Litany), this should not result in a
-                // net reduction in potency, and *may* in fact increase it if someone is slightly late in applying
-                // their party buffs, as it shifts the high-potency Confiteor cast back into the party buff window by a
-                // single GCD.
-                if (IsEnabled(CustomComboPreset.PaladinRequiescatFightOrFlightFeature) && IsEnabled(CustomComboPreset.PaladinFightOrFlightGoringBladeFeature))
-                {
-                    if (level >= PLD.Levels.GoringBlade && IsOffCooldown(PLD.GoringBlade))
-                    {
-                        if (HasEffect(PLD.Buffs.GoringBladeReady))
-                            return PLD.GoringBlade;
-                    }
-                }
-
-                if (level >= PLD.Levels.Confiteor)
-                {
-                    // Blade combo
-                    var original = OriginalHook(PLD.Confiteor);
-                    if (original != PLD.Confiteor)
-                        return original;
-
-                    if (HasEffect(PLD.Buffs.BladeOfHonorReady))
-                        return OriginalHook(PLD.Imperator);
-
-                    if (HasEffect(PLD.Buffs.ConfiteorReady))
-                        return OriginalHook(PLD.Confiteor);
-                }
-
-                if (level >= PLD.Levels.Requiescat && HasEffect(PLD.Buffs.Requiescat))
+                if (HasEffect(PLD.Buffs.DivineMight) && HasMp(PLD.HolySpirit) && !useBladeCombo)
                     return PLD.HolySpirit;
             }
 
-            if (IsEnabled(CustomComboPreset.PaladinRequiescatFightOrFlightFeature))
+            if (HasEffect(PLD.Buffs.AtonementReady) && (IsActionInRange(PLD.Atonement) || ignoreRangeCheck))
+                return PLD.Atonement;
+
+            var nextCombo = GetComboAction(lastComboMove, comboTime, level);
+            if (nextCombo == PLD.RoyalAuthority && HasEffect(PLD.Buffs.DivineMight) && HasMp(PLD.HolySpirit))
+                return PLD.HolySpirit;
+
+            if (IsActionInRange(nextCombo) || ignoreRangeCheck)
+                return nextCombo;
+        }
+        else
+        {
+            if (HasEffect(PLD.Buffs.GoringBladeReady) && (IsActionInRange(PLD.GoringBlade) || ignoreRangeCheck))
+                return PLD.GoringBlade;
+
+            if (HasEffect(PLD.Buffs.ConfiteorReady) && HasMpForConfiteorCombo())
+                return PLD.Confiteor;
+
+            if (bladeCombo > 0 && HasMp(bladeCombo))
+                return bladeCombo;
+
+            if (HasEffect(PLD.Buffs.Requiescat) && HasMp(PLD.HolySpirit) && !useBladeCombo)
+                return PLD.HolySpirit;
+
+            if (HasEffect(PLD.Buffs.AtonementReady) && (IsActionInRange(PLD.Atonement) || ignoreRangeCheck))
+                return PLD.Atonement;
+
+            var nextCombo = GetComboAction(lastComboMove, comboTime, level);
+            if (nextCombo == PLD.RoyalAuthority)
             {
-                if (level >= PLD.Levels.FightOrFlight)
-                {
-                    if (level < PLD.Levels.Requiescat)
-                        return PLD.FightOrFlight;
+                if (atonementComboReady && (IsActionInRange(atonementCombo) || ignoreRangeCheck))
+                    return atonementCombo;
 
-                    // Prefer FoF if it is off cooldown, or if it will be ready sooner than Requiescat.  In practice, this
-                    // means that Req should only be returned if FoF is on cooldown and Req is not, ie. immediately after
-                    // FoF is cast.  This ensures that the button shows the action that will next be available for use in
-                    // that hotbar slot, rather than swapping to FoF at the last instant when FoF comes off cooldown a
-                    // a single weave slot earlier than Req.
-                    return CalcBestAction(PLD.FightOrFlight, PLD.FightOrFlight, PLD.Requiescat);
-                }
+                if (HasEffect(PLD.Buffs.DivineMight) && HasMp(PLD.HolySpirit))
+                    return PLD.HolySpirit;
             }
+
+            if (IsActionInRange(nextCombo) || ignoreRangeCheck)
+                return nextCombo;
+
+            if (HasEffect(PLD.Buffs.DivineMight) && HasMp(PLD.HolySpirit))
+                return PLD.HolySpirit;
         }
 
-        return actionID;
+        return 0;
+    }
+
+    private static uint GetExpiringGcdAction()
+    {
+        ushort expiringBuff = GetEarliestExpiringBuff(
+            PLD.Buffs.GoringBladeReady, PLD.Buffs.DivineMight, PLD.Buffs.Requiescat,
+            PLD.Buffs.AtonementReady, PLD.Buffs.SupplicationReady, PLD.Buffs.SepulchreReady);
+
+        return expiringBuff switch
+        {
+            PLD.Buffs.GoringBladeReady => PLD.GoringBlade,
+            PLD.Buffs.DivineMight => PLD.HolySpirit,
+            PLD.Buffs.Requiescat => GetRequiescatGcd(),
+            PLD.Buffs.AtonementReady => PLD.Atonement,
+            PLD.Buffs.SupplicationReady => PLD.Supplication,
+            PLD.Buffs.SepulchreReady => PLD.Sepulchre,
+            _ => 0,
+        };
+    }
+
+    private static ushort GetEarliestExpiringBuff(params ushort[] buffs)
+    {
+        List<(ushort Id, float Time)> buffTimes =
+            Array.FindAll(buffs, HasEffect)
+                .Select(buffId => (buffId, GetEffectRemainingTime(buffId) - Gcd()))
+                .OrderBy(b => b.Item2)
+                .ToList();
+
+        float accTime = 0;
+        for (int i = 0; i < buffTimes.Count; i++)
+        {
+            accTime += 2.5f * Math.Max((byte)1, FindEffect(buffTimes[i].Id)!.StackCount);
+            if (buffTimes[i].Time < accTime)
+                return buffTimes[0].Id;
+        }
+
+        return 0;
+    }
+
+    private static uint GetRequiescatGcd()
+    {
+        var replacedConfiteor = OriginalHook(PLD.Confiteor);
+        var bladeCombo = replacedConfiteor != PLD.Confiteor ? replacedConfiteor : 0;
+        var useBladeCombo = HasEffect(PLD.Buffs.ConfiteorReady) || bladeCombo > 0;
+
+        if (useBladeCombo)
+            return bladeCombo;
+
+        return PLD.HolySpirit;
+    }
+
+    private static uint GetComboAction(uint lastComboMove, float comboTime, byte level)
+    {
+        if (comboTime > 0)
+        {
+            if (lastComboMove == PLD.RiotBlade && level >= PLD.Levels.RageOfHalone)
+                return OriginalHook(PLD.RageOfHalone);
+
+            if (lastComboMove == PLD.FastBlade && level >= PLD.Levels.RiotBlade)
+                return PLD.RiotBlade;
+        }
+
+        return PLD.FastBlade;
+    }
+
+    private static uint GetMultiTargetGcdAction(uint lastComboMove, float comboTime, byte level, GetActionOptions options)
+    {
+        var replacedConfiteor = OriginalHook(PLD.Confiteor);
+        var bladeCombo = replacedConfiteor != PLD.Confiteor ? replacedConfiteor : 0;
+        var useBladeCombo = HasEffect(PLD.Buffs.ConfiteorReady) || bladeCombo > 0;
+
+        if (HasEffect(PLD.Buffs.ConfiteorReady) && HasMpForConfiteorCombo())
+            return PLD.Confiteor;
+
+        if (bladeCombo > 0 && HasMp(bladeCombo))
+            return bladeCombo;
+
+        if (level >= PLD.Levels.HolyCircle && HasMp(PLD.HolyCircle) && !useBladeCombo)
+        {
+            if (HasEffect(PLD.Buffs.Requiescat) || HasEffect(PLD.Buffs.DivineMight))
+                return PLD.HolyCircle;
+        }
+
+        if (comboTime > 0 && lastComboMove == PLD.TotalEclipse && level >= PLD.Levels.Prominence)
+            return PLD.Prominence;
+
+        return PLD.TotalEclipse;
+    }
+
+    private static uint GetSingleTargetRestoreMPAction(uint lastComboMove, float comboTime)
+    {
+        if (comboTime > 0 && lastComboMove == PLD.FastBlade)
+            return PLD.RiotBlade;
+
+        return PLD.FastBlade;
+    }
+
+    private static uint GetMultiTargetRestoreMPAction(uint lastComboMove, float comboTime)
+    {
+        if (comboTime > 0 && lastComboMove == PLD.TotalEclipse)
+            return PLD.Prominence;
+
+        return PLD.TotalEclipse;
+    }
+
+    private static bool IsFightOrFlightUsed()
+    {
+        if (HasEffect(PLD.Buffs.FightOrFlight))
+            return true;
+
+        return IsOnCooldown(PLD.FightOrFlight) && GetCooldown(PLD.FightOrFlight).CooldownElapsed < 20;
+    }
+
+    private static float Gcd()
+    {
+        return GetCooldown(PLD.FastBlade).CooldownRemaining;
+    }
+
+    private static bool CanWeaveWithoutClip(uint actionID)
+    {
+        if (IsOffCooldown(actionID))
+            return true;
+
+        if (Gcd() > 1.5)
+            return false;
+
+        return GetCooldown(actionID).CooldownRemaining + 0.6 < Gcd();
+    }
+
+    private static unsafe bool IsActionInRange(uint actionId)
+    {
+        if (LocalPlayer == null || LocalPlayer.TargetObject == null)
+            return false;
+
+        var source = (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)LocalPlayer.Address;
+        var target = (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)LocalPlayer.TargetObject.Address;
+        return FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetActionInRangeOrLoS(actionId, source, target) != 566;
+    }
+
+    private static bool IsTargetInRadius(float radius)
+    {
+        if (LocalPlayer == null || LocalPlayer.TargetObject == null)
+            return false;
+
+        var target = LocalPlayer.TargetObject;
+        var dx = LocalPlayer.Position.X - target.Position.X;
+        var dz = LocalPlayer.Position.Z - target.Position.Z;
+        var dist = Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dz, 2));
+
+        return dist - target.HitboxRadius < radius;
     }
 }
 
-internal class PaladinSpiritsWithinCircleOfScorn : PaladinCombo
+internal class PaladinRotation : PaladinCombo
 {
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.PaladinScornfulSpiritsFeature;
+    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.PaladinOneButton;
 
     protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
     {
-        if (actionID == PLD.SpiritsWithin || actionID == PLD.Expiacion || actionID == PLD.CircleOfScorn)
-        {
-            if (level >= PLD.Levels.Expiacion)
-                return CalcBestAction(actionID, PLD.Expiacion, PLD.CircleOfScorn);
+        // Single target
+        if (actionID == BRD.HeavyShot)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.None);
 
-            if (level >= PLD.Levels.CircleOfScorn)
-                return CalcBestAction(actionID, PLD.SpiritsWithin, PLD.CircleOfScorn);
+        if (actionID == BRD.StraightShot)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.DelayBurst);
 
-            return PLD.SpiritsWithin;
-        }
+        if (actionID == BRD.IronJaws)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.RestoreMP);
 
-        return actionID;
-    }
-}
+        // Display
+        if (actionID == BRD.ApexArrow)
+            return GetGcdAction(lastComboMove, comboTime, level, GetActionOptions.None);
 
-internal class PaladinShieldBash : PaladinCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.PaladinShieldBashFeature;
+        // AoE
+        if (actionID == BRD.QuickNock)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.MultiTarget);
 
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
-    {
-        if (actionID == PLD.ShieldBash)
-        {
-            if (level >= PLD.Levels.LowBlow && IsOffCooldown(PLD.LowBlow))
-                return PLD.LowBlow;
-        }
+        if (actionID == BRD.Shadowbite)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.MultiTarget | GetActionOptions.DelayBurst);
 
         return actionID;
     }
