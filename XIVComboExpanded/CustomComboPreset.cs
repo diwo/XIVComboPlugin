@@ -1054,45 +1054,8 @@ public enum CustomComboPreset
     // ====================================================================================
     #region WARRIOR
 
-    [CustomComboInfo("Storms Path Combo", "Replace Storms Path with its combo chain.", WAR.JobID)]
-    WarriorStormsPathCombo = 2101,
-
-    [ParentCombo(WarriorStormsPathCombo)]
-    [CustomComboInfo("Storms Path Overcap Feature", "Replace Storms Path with Fell Cleave when the next combo action would cause the Beast Gauge to overcap.", WAR.JobID)]
-    WarriorStormsPathOvercapFeature = 2104,
-
-    [ParentCombo(WarriorStormsPathCombo)]
-    [CustomComboInfo("Storms Path Inner Release Feature", "Replace Storms Path with Fell Cleave when Inner Release is active.", WAR.JobID)]
-    WarriorStormsPathInnerReleaseFeature = 2110,
-
-    [CustomComboInfo("Storms Eye Combo", "Replace Storms Eye with its combo chain.", WAR.JobID)]
-    WarriorStormsEyeCombo = 2102,
-
-    [CustomComboInfo("Mythril Tempest Combo", "Replace Mythril Tempest with its combo chain.", WAR.JobID)]
-    WarriorMythrilTempestCombo = 2103,
-
-    [ParentCombo(WarriorMythrilTempestCombo)]
-    [CustomComboInfo("Mythril Tempest Overcap Feature", "Replace Mythril Tempest with Decimate the next combo action would cause the Beast Gauge to overcap.", WAR.JobID)]
-    WarriorMythrilTempestOvercapFeature = 2105,
-
-    [ParentCombo(WarriorMythrilTempestCombo)]
-    [CustomComboInfo("Mythril Tempest Inner Release Feature", "Replace Mythril Tempest with Decimate when Inner Release is active.", WAR.JobID)]
-    WarriorMythrilTempestInnerReleaseFeature = 2111,
-
-    [CustomComboInfo("Angry Beast Feature", "Replace Inner Beast and Steel Cyclone with Infuriate when less then 50 Beast Gauge is available.", WAR.JobID)]
-    WarriorInfuriateBeastFeature = 2109,
-
-    [CustomComboInfo("Nascent Flash Level Sync", "Replace Nascent Flash with Raw intuition when Synced.", WAR.JobID)]
-    WarriorNascentFlashSyncFeature = 2106,
-
-    [CustomComboInfo("Healthy Balanced Diet Feature", "Replace Bloodwhetting with Thrill of Battle, and then Equilibrium when the preceding is on cooldown.", WAR.JobID)]
-    WarriorHealthyBalancedDietFeature = 2112,
-
-    [CustomComboInfo("Primal Beast Feature", "Replace Inner Beast and Steel Cyclone with Primal Rend when available", WAR.JobID)]
-    WarriorPrimalBeastFeature = 2107,
-
-    [CustomComboInfo("Primal Release Feature", "Replace Inner Release with Primal Rend when available", WAR.JobID)]
-    WarriorPrimalReleaseFeature = 2108,
+    [CustomComboInfo("Warrior one button combo", "Warrior one button combo", WAR.JobID)]
+    WarriorOneButton = (WAR.JobID * 10000) + 1,
 
     #endregion
     // ====================================================================================
