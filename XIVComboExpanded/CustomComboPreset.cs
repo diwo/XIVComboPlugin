@@ -422,53 +422,8 @@ public enum CustomComboPreset
     // ====================================================================================
     #region MONK
 
-    [CustomComboInfo("Monk AoE Combo", "Replace Masterful Blitz with the AoE combo chain. This was changed from Rockbreaker due to an action queueing bug.", MNK.JobID)]
-    MonkAoECombo = 2001,
-
-    //[CustomComboInfo("Dragon Kick / Bootshine Feature", "Replace Dragon Kick with Bootshine if Leaden Fist is up.", MNK.JobID)]
-    //MonkBootshineFeature = 2011,
-
-    //[ConflictingCombos(MonkTrueStrikeFeature)]
-    //[CustomComboInfo("Twin Snakes / True Strike Feature", "Replace Twin Snakes with True Strike if Twin Snakes has more than 6s remaining.", MNK.JobID)]
-    //MonkTwinSnakesFeature = 2013,
-
-    //[ParentCombo(MonkTwinSnakesFeature)]
-    //[CustomComboInfo("Formless Snakes Option", "While Formless Fist is active, do not replace Twin Snakes.", MNK.JobID)]
-    //MonkFormlessSnakesOption = 2015,
-
-    //[ConflictingCombos(MonkTwinSnakesFeature)]
-    //[CustomComboInfo("True Strike / Twin Snakes Feature", "Replace True Strike with Twin Snakes if Twin Snakes has less than 6s remaining or isn't applied yet.", MNK.JobID)]
-    //MonkTrueStrikeFeature = 2016,
-
-    //[ParentCombo(MonkTrueStrikeFeature)]
-    //[CustomComboInfo("Formless Strike Option", "While Formless Fist is active, do not replace True Strike.", MNK.JobID)]
-    //MonkFormlessStrikeOption = 2018,
-
-    //[ConflictingCombos(MonkSnapPunchFeature)]
-    //[CustomComboInfo("Demolish / Snap Punch Feature", "Replace Demolish with Snap Punch if Demolish has more than 6s remaining on your current target.", MNK.JobID)]
-    //MonkDemolishFeature = 2014,
-
-    //[ConflictingCombos(MonkDemolishFeature)]
-    //[CustomComboInfo("Snap Punch / Demolish Feature", "Replace Snap Punch with Demolish if Demolish has less than 6s remaining on your current target or isn't applied yet.", MNK.JobID)]
-    //MonkSnapPunchFeature = 2017,
-
-    [CustomComboInfo("Dragon Balance Feature", "Replace Dragon Kick with Masterful Blitz if you have 3 Beast Chakra.", MNK.JobID)]
-    MonkDragonKickBalanceFeature = 2005,
-
-    //[CustomComboInfo("Dragon Meditation Feature", "Replace Dragon Kick with Meditation when out of combat and the Fifth Chakra is not open.", MNK.JobID)]
-    //MonkDragonKickMeditationFeature = 2012,
-
-    //[CustomComboInfo("Howling Fist / Meditation Feature", "Replace Howling Fist with Meditation when the Fifth Chakra is not open.", MNK.JobID)]
-    //MonkHowlingFistMeditationFeature = 2003,
-
-    [CustomComboInfo("Perfect Balance Feature", "Replace Perfect Balance with Masterful Blitz when you have 3 Beast Chakra.", MNK.JobID)]
-    MonkPerfectBalanceFeature = 2004,
-
-    [CustomComboInfo("Riddle of Brotherly Fire", "Replace Riddle of Fire with Brotherhood when on cooldown.", MNK.JobID)]
-    MonkRiddleOfFireBrotherhood = 2009,
-
-    [CustomComboInfo("Riddle of Fire and Wind", "Replace Riddle of Fire with Riddle of Wind when on cooldown.", MNK.JobID)]
-    MonkRiddleOfFireWind = 2010,
+    [CustomComboInfo("Monk one button combo", "Monk one button combo", MNK.JobID)]
+    MonkOneButton = (MNK.JobID * 10000) + 1,
 
     #endregion
     // ====================================================================================
