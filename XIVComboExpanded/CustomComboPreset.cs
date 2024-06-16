@@ -369,50 +369,8 @@ public enum CustomComboPreset
     // ====================================================================================
     #region GUNBREAKER
 
-    [CustomComboInfo("Solid Barrel Combo", "Replace Solid Barrel with its combo chain.", GNB.JobID)]
-    GunbreakerSolidBarrelCombo = 3701,
-
-    [ParentCombo(GunbreakerSolidBarrelCombo)]
-    [CustomComboInfo("Burst Strike Feature", "Replace Solid Barrel with Burst Strike when charges are full.", GNB.JobID)]
-    GunbreakerBurstStrikeFeature = 3710,
-
-    [CustomComboInfo("Gnashing Fang Continuation", "Replace Gnashing Fang with Continuation moves when appropriate.", GNB.JobID)]
-    GunbreakerGnashingFangCont = 3702,
-
-    [CustomComboInfo("Burst Strike Continuation", "Replace Burst Strike with Continuation moves when appropriate.", GNB.JobID)]
-    GunbreakerBurstStrikeCont = 3703,
-
-    [CustomComboInfo("Fated Circle Continuation", "Replace Fated Circle with Continuation moves when appropriate.", GNB.JobID)]
-    GunbreakerFatedCircleCont = 3714,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Sonic Shock Feature", "Replace Bow Shock and Sonic Break with one or the other depending on which is on cooldown.", GNB.JobID)]
-    GunbreakerBowShockSonicBreakFeature = 3704,
-
-    [CustomComboInfo("Demon Slaughter Combo", "Replace Demon Slaughter with its combo chain.", GNB.JobID)]
-    GunbreakerDemonSlaughterCombo = 3705,
-
-    [ParentCombo(GunbreakerDemonSlaughterCombo)]
-    [CustomComboInfo("Fated Circle Feature", "In addition to the Demon Slaughter combo, add Fated Circle when charges are full.", GNB.JobID)]
-    GunbreakerFatedCircleFeature = 3706,
-
-    [CustomComboInfo("Empty Bloodfest Feature", "Replace Burst Strike and Fated Circle with Bloodfest if the powder gauge is empty.", GNB.JobID)]
-    GunbreakerEmptyBloodfestFeature = 3707,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("No Mercy Bow Shock/Sonic Break Feature", "Replace No Mercy with Bow Shock, and then Sonic Break, while No Mercy is active.", GNB.JobID)]
-    GunbreakerNoMercyFeature = 3708,
-
-    [CustomComboInfo("No Mercy Double Down Feature", "Replace No Mercy with Double Down while No Mercy is active, 2 cartridges are available, and Double Down is off cooldown.\nThis takes priority over the No Mercy Bow Shock/Sonic Break Feature.", GNB.JobID)]
-    GunbreakerNoMercyDoubleDownFeature = 3712,
-
-    [ConflictingCombos(GunbreakerNoMercyFeature)]
-    [CustomComboInfo("No Mercy Always Double Down Feature", "Replace No Mercy with Double Down while No Mercy is active.", GNB.JobID)]
-    GunbreakerNoMercyAlwaysDoubleDownFeature = 3713,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Double Down Feature", "Replace Burst Strike and Fated Circle with Double Down when available.", GNB.JobID)]
-    GunbreakerDoubleDownFeature = 3709,
+    [CustomComboInfo("Gunbreaker one button combo", "Gunbreaker one button combo", GNB.JobID)]
+    GunbreakerOneButton = (GNB.JobID * 10000) + 1,
 
     #endregion
     // ====================================================================================
