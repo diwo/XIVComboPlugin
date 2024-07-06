@@ -125,7 +125,7 @@ internal partial class CustomComboCache : IDisposable
             return found;
 
         var cur = FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetMaxCharges(actionID, 0);
-        var max = FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetMaxCharges(actionID, 90);
+        var max = FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetMaxCharges(actionID, 100);
         return this.chargesCache[key] = (cur, max);
     }
 
