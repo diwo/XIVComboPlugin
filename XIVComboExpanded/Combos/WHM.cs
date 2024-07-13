@@ -212,3 +212,21 @@ internal class WhiteMageGlare4Feature : CustomCombo
         return actionID;
     }
 }
+
+internal class WhiteMageMiseryGlare4 : CustomCombo
+{
+    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.WhmAny;
+
+    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
+    {
+        if (actionID == WHM.AfflatusMisery)
+        {
+            var gauge = GetJobGauge<WHMGauge>();
+
+            if (gauge.BloodLily < 3 && HasEffect(WHM.Buffs.Glare4Ready))
+                return WHM.Glare4;
+        }
+
+        return actionID;
+    }
+}
