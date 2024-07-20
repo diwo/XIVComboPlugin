@@ -1,4 +1,7 @@
-﻿namespace XIVComboExpandedPlugin.Combos;
+﻿using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Component.GUI;
+
+namespace XIVComboExpandedPlugin.Combos;
 
 internal static class ADV
 {
@@ -14,7 +17,8 @@ internal static class ADV
     public static class Buffs
     {
         public const ushort
-            Medicated = 49;
+            Medicated = 49,
+            EurekaMoment = 2765;
     }
 
     public static class Debuffs
@@ -29,6 +33,33 @@ internal static class ADV
             Swiftcast = 18,
             VariantRaise2 = 90;
     }
+}
+
+// Miner
+internal static class MIN
+{
+    public const uint
+        Collect = 240,
+        Scour = 22182,
+        BrazenProspector = 22183,
+        MeticulousProspector = 22184,
+        Scrutiny = 22185,
+        SolidReason = 232,
+        WiseToTheWorld = 26521;
+}
+
+// Botanist
+internal static class BTN
+{
+    public const uint
+        // Botanist
+        Collect = 815,
+        Scour = 22186,
+        BrazenProspector = 22187,
+        MeticulousProspector = 22188,
+        Scrutiny = 22189,
+        AgelessWords = 215,
+        WiseToTheWorld = 26522;
 }
 
 internal class SwiftRaiseFeature : CustomCombo
@@ -67,7 +98,7 @@ internal class SwiftRaiseFeature : CustomCombo
 
 internal class VariantRaiseFeature : CustomCombo
 {
-    protected internal override CustomComboPreset Preset => CustomComboPreset.AdvVariantRaiseFeature;
+    protected internal override CustomComboPreset Preset => CustomComboPreset.AdvAny;
 
     protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
     {
@@ -87,5 +118,91 @@ internal class VariantRaiseFeature : CustomCombo
         }
 
         return actionID;
+    }
+}
+
+internal class GathererCombo : CustomCombo
+{
+    protected internal override CustomComboPreset Preset => CustomComboPreset.AdvAny;
+
+    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
+    {
+        if (actionID == MIN.SolidReason || actionID == BTN.AgelessWords)
+        {
+            if (IsGatheringCollectables())
+            {
+                var gp = LocalPlayer?.CurrentGp;
+                var integrity = GetCollectableIntegrity();
+                var missingIntegrity = GetCollectableIntegrityTotal() - integrity;
+                var agelessRemaining = gp / 300;
+                var collect = IsMiner() ? MIN.Collect : BTN.Collect;
+                var scour = IsMiner() ? MIN.Scour : BTN.Scour;
+                var isMaxedCollectability = CanUse(collect) && !CanUse(scour);
+
+                if (HasEffect(ADV.Buffs.EurekaMoment) && missingIntegrity > 0)
+                    return IsMiner() ? MIN.WiseToTheWorld : BTN.WiseToTheWorld;
+
+                if (isMaxedCollectability)
+                {
+                    if (missingIntegrity == 0 || agelessRemaining == 0)
+                        return collect;
+
+                    if (integrity >= 2 && missingIntegrity < agelessRemaining * 2)
+                        return collect;
+                }
+            }
+            else
+            {
+                if (HasEffect(ADV.Buffs.EurekaMoment))
+                    return IsMiner() ? MIN.WiseToTheWorld : BTN.WiseToTheWorld;
+            }
+        }
+
+        return actionID;
+    }
+
+    private static unsafe bool CanUse(uint actionId)
+    {
+        return FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance()->GetActionStatus(FFXIVClientStructs.FFXIV.Client.Game.ActionType.Action, actionId) == 0;
+    }
+
+    private static bool IsMiner()
+    {
+        return LocalPlayer?.ClassJob.GameData?.DohDolJobIndex == 0;
+    }
+
+    private static unsafe bool IsGatheringCollectables()
+    {
+        AddonGatheringMasterpiece* addon = GetAddonGatheringMasterpiece();
+        return addon != null && addon->IsVisible && GetCollectableIntegrityTotal() > 0;
+    }
+
+    private static unsafe int GetCollectableIntegrity()
+    {
+        AddonGatheringMasterpiece* addon = GetAddonGatheringMasterpiece();
+        if (addon != null && addon->IntegrityLeftover != null)
+        {
+            if (int.TryParse(addon->IntegrityLeftover->NodeText, out int integrity))
+                return integrity;
+        }
+
+        return 0;
+    }
+
+    private static unsafe int GetCollectableIntegrityTotal()
+    {
+        AddonGatheringMasterpiece* addon = GetAddonGatheringMasterpiece();
+        if (addon != null && addon->IntegrityTotal != null)
+        {
+            if (int.TryParse(addon->IntegrityTotal->NodeText, out int integrityTotal))
+                return integrityTotal;
+        }
+
+        return 0;
+    }
+
+    private static unsafe AddonGatheringMasterpiece* GetAddonGatheringMasterpiece()
+    {
+        return (AddonGatheringMasterpiece*)AtkStage.Instance()->RaptureAtkUnitManager->GetAddonByName("GatheringMasterpiece");
     }
 }
