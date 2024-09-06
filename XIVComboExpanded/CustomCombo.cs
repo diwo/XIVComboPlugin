@@ -299,6 +299,9 @@ internal abstract partial class CustomCombo
     protected static Status? FindEffect(ushort effectID)
         => FindEffect(effectID, LocalPlayer, LocalPlayer?.EntityId);
 
+    protected static float GetEffectRemainingTime(ushort effectID)
+        => Math.Abs(FindEffect(effectID)?.RemainingTime ?? 0);
+
     /// <summary>
     /// Find if an effect on the target exists.
     /// The effect must be owned by the player or unowned.
@@ -316,6 +319,9 @@ internal abstract partial class CustomCombo
     /// <returns>Status object or null.</returns>
     protected static Status? FindTargetEffect(ushort effectID)
         => FindEffect(effectID, CurrentTarget, LocalPlayer?.EntityId);
+
+    protected static float GetTargetEffectRemainingTime(ushort effectID)
+        => Math.Abs(FindTargetEffect(effectID)?.RemainingTime ?? 0);
 
     /// <summary>
     /// Find if an effect on the player exists.
