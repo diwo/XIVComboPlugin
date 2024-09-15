@@ -324,34 +324,8 @@ public enum CustomComboPreset
     // ====================================================================================
     #region DARK KNIGHT
 
-    [CustomComboInfo("Souleater Combo", "Replace Souleater with its combo chain.", DRK.JobID)]
-    DarkSouleaterCombo = 3201,
-
-    [ParentCombo(DarkSouleaterCombo)]
-    [CustomComboInfo("Souleater Overcap Feature", "Replace Souleater with Bloodspiller when the next combo action would cause the Blood Gauge to overcap.", WAR.JobID)]
-    DarkSouleaterOvercapFeature = 3206,
-
-    [CustomComboInfo("Stalwart Soul Combo", "Replace Stalwart Soul with its combo chain.", DRK.JobID)]
-    DarkStalwartSoulCombo = 3202,
-
-    [ParentCombo(DarkStalwartSoulCombo)]
-    [CustomComboInfo("Stalwart Soul Overcap Feature", "Replace Stalwart Soul with Quietus when the next combo action would cause the Blood Gauge to overcap.", WAR.JobID)]
-    DarkStalwartSoulOvercapFeature = 3207,
-
-    [CustomComboInfo("Delirium Feature", "Replace Souleater and Stalwart Soul with Bloodspiller and Quietus when Delirium is active.", DRK.JobID)]
-    DarkDeliriumFeature = 3203,
-
-    [CustomComboInfo("Blood Weapon Feature", "Replace Carve and Spit, and Abyssal Drain with Blood Weapon/Delirium when available.", DRK.JobID)]
-    DarkBloodWeaponFeature = 3204,
-
-    [CustomComboInfo("Living Shadow Feature", "Replace Quietus and Bloodspiller with Living Shadow when available.", DRK.JobID)]
-    DarkLivingShadowFeature = 3205,
-
-    [CustomComboInfo("Living Shadowbringer Feature", "Replace Living Shadow with Shadowbringer when charges are available and your Shadow is present.", DRK.JobID)]
-    DarkLivingShadowbringerFeature = 3208,
-
-    [CustomComboInfo("Missing Shadowbringer Feature", "Replace Living Shadow with Shadowbringer when charges are available and Living Shadow is on cooldown.", DRK.JobID)]
-    DarkLivingShadowbringerHpFeature = 3209,
+    [CustomComboInfo("Dark Knight one button combo", "Dark Knight one button combo", DRK.JobID)]
+    DarkOneButton = (DRK.JobID * 10000) + 1,
 
     #endregion
     // ====================================================================================
