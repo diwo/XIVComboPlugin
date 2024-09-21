@@ -197,58 +197,8 @@ public enum CustomComboPreset
     // ====================================================================================
     #region DANCER
 
-    [CustomComboInfo("Fan Dance 3 Feature", "Replace Fan Dance and Fan Dance 2 with Fan Dance 3 when available.", DNC.JobID)]
-    DancerFanDance3Feature = 3801,
-
-    [ParentCombo(DancerFanDance3Feature)]
-    [CustomComboInfo("Fan Dance 4 Feature", "Replace Fan Dance and Fan Dance 2 with Fan Dance 4 when available.", DNC.JobID)]
-    DancerFanDance4Feature = 3809,
-
-    [SecretCustomCombo]
-    [ConflictingCombos(DancerDanceComboCompatibility)]
-    [CustomComboInfo("Dance Step Combo", "Replace Standard Step and Technical Step with each dance step while dancing.", DNC.JobID)]
-    DancerDanceStepCombo = 3802,
-
-    [CustomComboInfo("Flourishing Fan Dance 3", "Replace Flourish with Fan Dance 3 when available.", DNC.JobID)]
-    DancerFlourishFan3Feature = 3810,
-
-    [CustomComboInfo("Flourishing Fan Dance 4", "Replace Flourish with Fan Dance 4 when available.", DNC.JobID)]
-    DancerFlourishFan4Feature = 3808,
-
-    [ConflictingCombos(DancerSingleTargetProcs)]
-    [CustomComboInfo("Single Target Multibutton", "Replace Cascade with its procs and combos as they activate.", DNC.JobID)]
-    DancerSingleTargetMultibutton = 3804,
-
-    [ConflictingCombos(DancerSingleTargetMultibutton)]
-    [CustomComboInfo("Single Target to Procs", "Replace Cascade and Fountain with Reverse Cascade and Fountainfall respectively when available.", DNC.JobID)]
-    DancerSingleTargetProcs = 3811,
-
-    [CustomComboInfo("AoE Multibutton", "Replace Windmill with its procs and combos as they activate.", DNC.JobID)]
-    DancerAoeMultibutton = 3805,
-
-    [CustomComboInfo("AoE to Procs", "Replace Windmill and Bladeshower with Rising Wiindmill and Bloodshower respectively when available.", DNC.JobID)]
-    DancerAoeProcs = 3812,
-
-    [ConflictingCombos(DancerDanceStepCombo)]
-    [CustomComboInfo(
-        "Dance Step Feature",
-        "Replace arbitrary actions with dance steps while dancing." +
-        "\nThis helps ensure you can still dance with combos on, without using auto dance." +
-        "\nYou can change the respective actions by inputting action IDs below for each dance step." +
-        "\nThe defaults are Cascade, Flourish, Fan Dance and Fan Dance II. If set to 0, they will reset to these actions." +
-        "\nYou can get Action IDs with Garland Tools by searching for the action and clicking the cog.",
-        DNC.JobID)]
-    DancerDanceComboCompatibility = 3806,
-
-    [CustomComboInfo("Devilment Feature", "Replace Devilment with Starfall Dance when active.", DNC.JobID)]
-    DancerDevilmentFeature = 3807,
-
-    [CustomComboInfo("Last Dance Feature", "Replace Standard Step by Last Dance if available.", DNC.JobID)]
-    DancerLastDanceFeature = 3813,
-
-    [ParentCombo(DancerLastDanceFeature)]
-    [CustomComboInfo("Finishing Move Priority", "Priorize Finishing Move over Last Dance when replacing Standard Step.", DNC.JobID)]
-    DancerFinishingMovePriorityFeature = 3814,
+    [CustomComboInfo("Dancer one button combo", "Dancer one button combo", DNC.JobID)]
+    DancerOneButton = (DNC.JobID * 10000) + 1,
 
     #endregion
     // ====================================================================================

@@ -68,17 +68,6 @@ public class PluginConfiguration : IPluginConfiguration
     public bool HideChildren { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets an array of 4 ability IDs to interact with the <see cref="CustomComboPreset.DancerDanceComboCompatibility"/> combo.
-    /// </summary>
-    public uint[] DancerDanceCompatActionIDs { get; set; } = new uint[]
-    {
-        DNC.Cascade,
-        DNC.Flourish,
-        DNC.FanDance1,
-        DNC.FanDance2,
-    };
-
-    /// <summary>
     /// Save the configuration to disk.
     /// </summary>
     public void Save()

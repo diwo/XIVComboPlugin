@@ -202,25 +202,6 @@ internal class ConfigWindow : Window
             }
         }
 
-        if (preset == CustomComboPreset.DancerDanceComboCompatibility && enabled)
-        {
-            var actions = Service.Configuration.DancerDanceCompatActionIDs.Cast<int>().ToArray();
-
-            var inputChanged = false;
-            inputChanged |= ImGui.InputInt("Emboite (Red) ActionID", ref actions[0], 0);
-            inputChanged |= ImGui.InputInt("Entrechat (Blue) ActionID", ref actions[1], 0);
-            inputChanged |= ImGui.InputInt("Jete (Green) ActionID", ref actions[2], 0);
-            inputChanged |= ImGui.InputInt("Pirouette (Yellow) ActionID", ref actions[3], 0);
-
-            if (inputChanged)
-            {
-                Service.Configuration.DancerDanceCompatActionIDs = actions.Cast<uint>().ToArray();
-                Service.Configuration.Save();
-            }
-
-            ImGui.Spacing();
-        }
-
         i++;
 
         var hideChildren = Service.Configuration.HideChildren;

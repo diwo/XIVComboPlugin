@@ -32,12 +32,17 @@ internal static class DNC
         FanDance3 = 16009,
         FanDance4 = 25791,
         // Other
+        SecondWind = 7541,
+        ArmsLength = 7548,
         SaberDance = 16005,
         EnAvant = 16010,
         Devilment = 16011,
+        ShieldSamba = 16012,
         Flourish = 16013,
         Improvisation = 16014,
-        StarfallDance = 25792;
+        CuringWaltz = 16015,
+        StarfallDance = 25792,
+        DanceOfTheDawn = 36985;
 
     public static class Buffs
     {
@@ -51,9 +56,13 @@ internal static class DNC
             StandardStep = 1818,
             TechnicalStep = 1819,
             ThreefoldFanDance = 1820,
+            StandardFinish = 1821,
+            TechnicalFinish = 1822,
+            Devilment = 1825,
             FourfoldFanDance = 2699,
             LastDanceReady = 3867,
-            FinishingMoveReady = 3868;
+            FinishingMoveReady = 3868,
+            DanceOfTheDawnReady = 3869;
     }
 
     public static class Debuffs
@@ -74,6 +83,9 @@ internal static class DNC
             RisingWindmill = 35,
             Fountainfall = 40,
             Bloodshower = 45,
+            CuringWaltz = 52,
+            ShieldSamba = 56,
+            Devilment = 62,
             FanDance3 = 66,
             TechnicalStep = 70,
             Flourish = 72,
@@ -81,80 +93,316 @@ internal static class DNC
             FanDance4 = 86,
             StarfallDance = 90,
             LastDance = 92,
-            FinishingMove = 96;
+            FinishingMove = 96,
+            DanceOfTheDawn = 100;
     }
 }
 
-internal class DancerDanceComboCompatibility : CustomCombo
+internal abstract class DancerCombo : CustomCombo
 {
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.DancerDanceComboCompatibility;
+    private const float GcdRecast = 2.5f;
+    private const float EarlyWeaveGcdRemainingThreshold = 1.0f;
+    private const float DefaultClipThreshold = 0.6f;
+
+    [Flags]
+    protected enum GetActionOptions
+    {
+        None = 0,
+        MultiTarget = 1 << 0,
+        DelayBurst = 1 << 1,
+        UseResources = 1 << 2,
+        UseShieldSamba = 1 << 3,
+        UseCuringWaltz = 1 << 4,
+        UseArmsLength = 1 << 5,
+        UseSecondWind = 1 << 6,
+    }
+
+    protected static uint GetRotationAction(uint lastComboMove, float comboTime, byte level, GetActionOptions options)
+    {
+        var weaveAction = GetWeaveAction(lastComboMove, comboTime, level, options);
+        if (weaveAction > 0)
+            return weaveAction;
+
+        return GetGcdAction(lastComboMove, comboTime, level, options);
+    }
+
+    private static uint GetWeaveAction(uint lastComboMove, float comboTime, byte level, GetActionOptions options)
+    {
+        var gauge = GetJobGauge<DNCGauge>();
+        var fanDance12 = !options.HasFlag(GetActionOptions.MultiTarget) ? DNC.FanDance1 : DNC.FanDance2;
+
+        if (level >= DNC.Levels.FinishingMove && IsDevilmentUsed() && !HasEffect(DNC.Buffs.StandardFinish) && IsOffCooldown(DNC.Flourish))
+            return DNC.Flourish;
+
+        if (Gcd() < DefaultClipThreshold)
+            return 0;
+
+        if (level >= DNC.Levels.Devilment && CanWeaveWithoutBlock(DNC.Devilment))
+        {
+            if (HasEffect(DNC.Buffs.TechnicalFinish))
+                return DNC.Devilment;
+
+            if (level < DNC.Levels.TechnicalStep && !options.HasFlag(GetActionOptions.DelayBurst))
+                return DNC.Devilment;
+        }
+
+        if (level >= DNC.Levels.FanDance3 && HasEffect(DNC.Buffs.ThreefoldFanDance))
+            return DNC.FanDance3;
+
+        if (gauge.Feathers == 4)
+            return fanDance12;
+
+        if (HasEffect(DNC.Buffs.FourfoldFanDance) && IsActionInRange(DNC.FanDance4))
+            return DNC.FanDance4;
+
+        if (level >= DNC.Levels.Flourish && CanWeaveWithoutBlock(DNC.Flourish))
+        {
+            if (IsDevilmentUsed() || GetCooldown(DNC.Devilment).CooldownRemaining > 50)
+                return DNC.Flourish;
+
+            if (options.HasFlag(GetActionOptions.UseResources))
+                return DNC.Flourish;
+        }
+
+        if (level >= DNC.Levels.ShieldSamba && options.HasFlag(GetActionOptions.UseShieldSamba) && CanWeaveWithoutBlock(DNC.ShieldSamba))
+            return DNC.ShieldSamba;
+
+        if (level >= DNC.Levels.CuringWaltz && options.HasFlag(GetActionOptions.UseCuringWaltz) && CanWeaveWithoutBlock(DNC.CuringWaltz))
+            return DNC.CuringWaltz;
+
+        if (options.HasFlag(GetActionOptions.UseArmsLength) && CanWeaveWithoutBlock(DNC.ArmsLength))
+            return DNC.ArmsLength;
+
+        if (options.HasFlag(GetActionOptions.UseSecondWind) && CanWeaveWithoutBlock(DNC.SecondWind))
+            return DNC.SecondWind;
+
+        if (gauge.Feathers > 0 && CanWeaveWithoutBlock(fanDance12))
+        {
+            if (IsDevilmentUsed() || options.HasFlag(GetActionOptions.UseResources))
+                return fanDance12;
+        }
+
+        return 0;
+    }
+
+    protected static uint GetGcdAction(uint lastComboMove, float comboTime, byte level, GetActionOptions options)
+    {
+        var gauge = GetJobGauge<DNCGauge>();
+        var isTillanaReady = HasEffect(DNC.Buffs.FlourishingFinish) && GetEffectRemainingTime(DNC.Buffs.FlourishingFinish) < GetCooldown(DNC.Devilment).CooldownRemaining;
+
+        if (gauge.IsDancing)
+        {
+            if (HasEffect(DNC.Buffs.StandardStep) && gauge.CompletedSteps == 2)
+                return OriginalHook(DNC.StandardStep);
+
+            if (HasEffect(DNC.Buffs.TechnicalStep) && gauge.CompletedSteps == 4)
+                return OriginalHook(DNC.TechnicalStep);
+
+            return gauge.NextStep;
+        }
+
+        if (level >= DNC.Levels.TechnicalStep && IsGcdActionOffCooldown(DNC.TechnicalStep) && !options.HasFlag(GetActionOptions.DelayBurst) && InCombat())
+            return DNC.TechnicalStep;
+
+        var isWaitForFlourish = level >= DNC.Levels.FinishingMove && IsDevilmentUsed() && !HasEffect(DNC.Buffs.FlourishingSymmetry);
+        if (level >= DNC.Levels.StandardStep && IsGcdActionOffCooldown(DNC.StandardStep) && !isWaitForFlourish)
+        {
+            if (HasEffect(DNC.Buffs.FinishingMoveReady))
+            {
+                if (IsTargetInRadius(15))
+                    return DNC.FinishingMove;
+            }
+            else if (!options.HasFlag(GetActionOptions.DelayBurst))
+            {
+                return DNC.StandardStep;
+            }
+        }
+
+        if (HasEffect(DNC.Buffs.LastDanceReady) && GetEffectRemainingTime(DNC.Buffs.LastDanceReady) - Gcd() < GcdRecast)
+            return DNC.LastDance;
+
+        if (gauge.Esprit >= 50)
+        {
+            if (IsDevilmentUsed() || isTillanaReady || gauge.Esprit >= 80 || options.HasFlag(GetActionOptions.UseResources))
+                return OriginalHook(DNC.SaberDance);
+
+            if (!HasEffect(DNC.Buffs.DanceOfTheDawnReady) && HasEffect(DNC.Buffs.FlourishingFinish))
+                return OriginalHook(DNC.SaberDance);
+        }
+
+        if (HasEffect(DNC.Buffs.LastDanceReady))
+        {
+            var canHoldForDevilment = GetEffectRemainingTime(DNC.Buffs.LastDanceReady) > GetCooldown(DNC.Devilment).CooldownRemaining + (2 * GcdRecast);
+            if (IsDevilmentUsed() || !canHoldForDevilment || options.HasFlag(GetActionOptions.UseResources))
+                return DNC.LastDance;
+        }
+
+        if (isTillanaReady && gauge.Esprit < 50 && IsTargetInRadius(15))
+        {
+            var isDevilmentEndSoon = GetEffectRemainingTime(DNC.Buffs.Devilment) - Gcd() < GcdRecast * 3;
+            if (gauge.Esprit <= 40 || !IsDevilmentUsed() || isDevilmentEndSoon)
+                return DNC.Tillana;
+        }
+
+        if (HasEffect(DNC.Buffs.FlourishingStarfall))
+            return DNC.StarfallDance;
+
+        return !options.HasFlag(GetActionOptions.MultiTarget) ?
+            GetSingleTargetComboAction(lastComboMove, comboTime, level) :
+            GetMultiTargetComboAction(lastComboMove, comboTime, level);
+    }
+
+    private static uint GetSingleTargetComboAction(uint lastComboMove, float comboTime, byte level)
+    {
+        if (level >= DNC.Levels.Fountainfall && (HasEffect(DNC.Buffs.FlourishingFlow) || HasEffect(DNC.Buffs.SilkenFlow)))
+            return DNC.Fountainfall;
+
+        if (level >= DNC.Levels.ReverseCascade && (HasEffect(DNC.Buffs.FlourishingSymmetry) || HasEffect(DNC.Buffs.SilkenSymmetry)))
+            return DNC.ReverseCascade;
+
+        if (lastComboMove == DNC.Cascade && level >= DNC.Levels.Fountain)
+            return DNC.Fountain;
+
+        return DNC.Cascade;
+    }
+
+    private static uint GetMultiTargetComboAction(uint lastComboMove, float comboTime, byte level)
+    {
+        if (level >= DNC.Levels.Bloodshower && (HasEffect(DNC.Buffs.FlourishingFlow) || HasEffect(DNC.Buffs.SilkenFlow)))
+            return DNC.Bloodshower;
+
+        if (level >= DNC.Levels.RisingWindmill && (HasEffect(DNC.Buffs.FlourishingSymmetry) || HasEffect(DNC.Buffs.SilkenSymmetry)))
+            return DNC.RisingWindmill;
+
+        if (lastComboMove == DNC.Windmill && level >= DNC.Levels.Bladeshower)
+            return DNC.Bladeshower;
+
+        return DNC.Windmill;
+    }
+
+    private static bool IsDevilmentUsed()
+    {
+        return IsOnCooldown(DNC.Devilment) && GetCooldown(DNC.Devilment).CooldownElapsed < 20;
+    }
+
+    private static float Gcd()
+    {
+        return GetCooldown(DNC.Cascade).CooldownRemaining;
+    }
+
+    private static float GcdElapsed()
+    {
+        return GcdRecast - Gcd();
+    }
+
+    private static bool IsGcdActionOffCooldown(uint actionID)
+    {
+        return GetCooldown(actionID).CooldownRemaining <= Gcd();
+    }
+
+    private static bool IsEarlyWeave()
+    {
+        return Gcd() > EarlyWeaveGcdRemainingThreshold;
+    }
+
+    private static bool CanWeave(uint actionID, uint gcdCount = 0, bool noBlock = false, float clipThreshold = DefaultClipThreshold)
+    {
+        var cd = GetCooldown(actionID);
+        var cdRemaining = cd.HasCharges
+            ? cd.RemainingCharges == 0
+                ? cd.ChargeCooldownRemaining
+                : 0
+            : cd.CooldownRemaining;
+
+        if (gcdCount == 0 && noBlock)
+        {
+            var canEarlyWeaveAfterCd = Gcd() - cdRemaining > EarlyWeaveGcdRemainingThreshold;
+            if (IsEarlyWeave() && !canEarlyWeaveAfterCd)
+                return false;
+        }
+
+        return cdRemaining + clipThreshold <= Gcd() + (gcdCount * GcdRecast);
+    }
+
+    private static bool CanWeaveWithoutBlock(uint actionID)
+    {
+        return CanWeave(actionID, noBlock: true);
+    }
+
+    private static unsafe bool IsActionInRange(uint actionId)
+    {
+        if (LocalPlayer == null || LocalPlayer.TargetObject == null)
+            return false;
+
+        var source = (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)LocalPlayer.Address;
+        var target = (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)LocalPlayer.TargetObject.Address;
+        return FFXIVClientStructs.FFXIV.Client.Game.ActionManager.GetActionInRangeOrLoS(actionId, source, target) != 566;
+    }
+
+    private static bool IsTargetInRadius(float radius)
+    {
+        if (LocalPlayer == null || LocalPlayer.TargetObject == null)
+            return false;
+
+        var target = LocalPlayer.TargetObject;
+        var dx = LocalPlayer.Position.X - target.Position.X;
+        var dz = LocalPlayer.Position.Z - target.Position.Z;
+        var dist = Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dz, 2));
+
+        return dist - target.HitboxRadius < radius;
+    }
+}
+
+internal class DancerRotation : DancerCombo
+{
+    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.DancerOneButton;
 
     protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
     {
-        var actionIDs = Service.Configuration.DancerDanceCompatActionIDs;
+        // Single target
+        if (actionID == PLD.FastBlade)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.None);
 
-        if (actionIDs.Contains(actionID))
-        {
-            var gauge = GetJobGauge<DNCGauge>();
+        if (actionID == PLD.RiotBlade)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.DelayBurst);
 
-            if (level >= DNC.Levels.StandardStep && gauge.IsDancing)
-            {
-                if (actionID == actionIDs[0] || (actionIDs[0] == 0 && actionID == DNC.Cascade))
-                    return OriginalHook(DNC.Cascade);
+        if (actionID == PLD.SpiritsWithin)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.UseResources);
 
-                if (actionID == actionIDs[1] || (actionIDs[1] == 0 && actionID == DNC.Flourish))
-                    return OriginalHook(DNC.Fountain);
+        // Display
+        if (actionID == PLD.GoringBlade)
+            return GetGcdAction(lastComboMove, comboTime, level, GetActionOptions.None);
 
-                if (actionID == actionIDs[2] || (actionIDs[2] == 0 && actionID == DNC.FanDance1))
-                    return OriginalHook(DNC.ReverseCascade);
+        // AoE
+        if (actionID == PLD.TotalEclipse)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.MultiTarget);
 
-                if (actionID == actionIDs[3] || (actionIDs[3] == 0 && actionID == DNC.FanDance2))
-                    return OriginalHook(DNC.Fountainfall);
-            }
-        }
+        if (actionID == PLD.Prominence)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.MultiTarget | GetActionOptions.DelayBurst);
+
+        if (actionID == PLD.CircleOfScorn)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.MultiTarget | GetActionOptions.UseResources);
+
+        // Utility
+        if (actionID == PLD.FightOrFlight)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.UseShieldSamba);
+
+        if (actionID == PLD.Requiescat)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.UseCuringWaltz);
+
+        if (actionID == PLD.HolySpirit)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.UseSecondWind);
+
+        if (actionID == PLD.HolyCircle)
+            return GetRotationAction(lastComboMove, comboTime, level, GetActionOptions.UseArmsLength);
 
         return actionID;
     }
 }
 
-internal class DancerFanDance12 : CustomCombo
+internal class DancerStandardStep : DancerCombo
 {
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.DncAny;
-
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
-    {
-        if (actionID == DNC.FanDance1 || actionID == DNC.FanDance2)
-        {
-            var gauge = GetJobGauge<DNCGauge>();
-
-            if (IsEnabled(CustomComboPreset.DancerFanDance3Feature))
-            {
-                if (IsEnabled(CustomComboPreset.DancerFanDance4Feature))
-                {
-                    if (gauge.Feathers == 4)
-                    {
-                        if (level >= DNC.Levels.FanDance3 && HasEffect(DNC.Buffs.ThreefoldFanDance))
-                            return DNC.FanDance3;
-
-                        return actionID;
-                    }
-
-                    if (level >= DNC.Levels.FanDance4 && HasEffect(DNC.Buffs.FourfoldFanDance))
-                        return DNC.FanDance4;
-                }
-
-                if (level >= DNC.Levels.FanDance3 && HasEffect(DNC.Buffs.ThreefoldFanDance))
-                    return DNC.FanDance3;
-            }
-        }
-
-        return actionID;
-    }
-}
-
-internal class DancerStandardStepTechnicalStep : CustomCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.DancerDanceStepCombo;
+    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.DancerOneButton;
 
     protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
     {
@@ -162,172 +410,12 @@ internal class DancerStandardStepTechnicalStep : CustomCombo
         {
             var gauge = GetJobGauge<DNCGauge>();
 
-            if (level >= DNC.Levels.StandardStep && gauge.IsDancing && HasEffect(DNC.Buffs.StandardStep))
+            if (gauge.IsDancing && HasEffect(DNC.Buffs.StandardStep))
             {
                 if (gauge.CompletedSteps < 2)
                     return gauge.NextStep;
 
-                return OriginalHook(DNC.StandardStep);
-            }
-
-            return DNC.StandardStep;
-        }
-
-        if (actionID == DNC.TechnicalStep)
-        {
-            var gauge = GetJobGauge<DNCGauge>();
-
-            if (level >= DNC.Levels.TechnicalStep && gauge.IsDancing && HasEffect(DNC.Buffs.TechnicalStep))
-            {
-                if (gauge.CompletedSteps < 4)
-                    return gauge.NextStep;
-            }
-
-            // Tillana
-            return OriginalHook(DNC.TechnicalStep);
-        }
-
-        return actionID;
-    }
-}
-
-internal class DancerFlourish : CustomCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.DncAny;
-
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
-    {
-        if (actionID == DNC.Flourish)
-        {
-            if (IsEnabled(CustomComboPreset.DancerFlourishFan3Feature))
-            {
-                if (level >= DNC.Levels.FanDance3 && HasEffect(DNC.Buffs.ThreefoldFanDance))
-                    return DNC.FanDance3;
-            }
-
-            if (IsEnabled(CustomComboPreset.DancerFlourishFan4Feature))
-            {
-                if (level >= DNC.Levels.FanDance4 && HasEffect(DNC.Buffs.FourfoldFanDance))
-                    return DNC.FanDance4;
-            }
-        }
-
-        return actionID;
-    }
-}
-
-internal class DancerCascadeFountain : CustomCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.DncAny;
-
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
-    {
-        if (actionID == DNC.Cascade)
-        {
-            if (IsEnabled(CustomComboPreset.DancerSingleTargetMultibutton))
-            {
-                if (level >= DNC.Levels.Fountainfall && (HasEffect(DNC.Buffs.FlourishingFlow) || HasEffect(DNC.Buffs.SilkenFlow)))
-                    return DNC.Fountainfall;
-
-                if (level >= DNC.Levels.ReverseCascade && (HasEffect(DNC.Buffs.FlourishingSymmetry) || HasEffect(DNC.Buffs.SilkenSymmetry)))
-                    return DNC.ReverseCascade;
-
-                if (lastComboMove == DNC.Cascade && level >= DNC.Levels.Fountain)
-                    return DNC.Fountain;
-            }
-
-            if (IsEnabled(CustomComboPreset.DancerSingleTargetProcs))
-            {
-                if (level >= DNC.Levels.ReverseCascade && (HasEffect(DNC.Buffs.FlourishingSymmetry) || HasEffect(DNC.Buffs.SilkenSymmetry)))
-                    return DNC.ReverseCascade;
-            }
-        }
-
-        if (actionID == DNC.Fountain)
-        {
-            if (IsEnabled(CustomComboPreset.DancerSingleTargetProcs))
-            {
-                if (level >= DNC.Levels.Fountainfall && (HasEffect(DNC.Buffs.FlourishingFlow) || HasEffect(DNC.Buffs.SilkenFlow)))
-                    return DNC.Fountainfall;
-            }
-        }
-
-        return actionID;
-    }
-}
-
-internal class DancerWindmillBladeshower : CustomCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.DncAny;
-
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
-    {
-        if (actionID == DNC.Windmill)
-        {
-            if (IsEnabled(CustomComboPreset.DancerAoeMultibutton))
-            {
-                if (level >= DNC.Levels.Bloodshower && (HasEffect(DNC.Buffs.FlourishingFlow) || HasEffect(DNC.Buffs.SilkenFlow)))
-                    return DNC.Bloodshower;
-
-                if (level >= DNC.Levels.RisingWindmill && (HasEffect(DNC.Buffs.FlourishingSymmetry) || HasEffect(DNC.Buffs.SilkenSymmetry)))
-                    return DNC.RisingWindmill;
-
-                if (lastComboMove == DNC.Windmill && level >= DNC.Levels.Bladeshower)
-                    return DNC.Bladeshower;
-            }
-
-            if (IsEnabled(CustomComboPreset.DancerAoeProcs))
-            {
-                if (level >= DNC.Levels.RisingWindmill && (HasEffect(DNC.Buffs.FlourishingSymmetry) || HasEffect(DNC.Buffs.SilkenSymmetry)))
-                    return DNC.RisingWindmill;
-            }
-        }
-
-        if (actionID == DNC.Bladeshower)
-        {
-            if (IsEnabled(CustomComboPreset.DancerAoeProcs))
-            {
-                if (level >= DNC.Levels.Bloodshower && (HasEffect(DNC.Buffs.FlourishingFlow) || HasEffect(DNC.Buffs.SilkenFlow)))
-                    return DNC.Bloodshower;
-            }
-        }
-
-        return actionID;
-    }
-}
-
-internal class DancerDevilment : CustomCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.DancerDevilmentFeature;
-
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
-    {
-        if (actionID == DNC.Devilment)
-        {
-            if (level >= DNC.Levels.StarfallDance && HasEffect(DNC.Buffs.FlourishingStarfall))
-                return DNC.StarfallDance;
-        }
-
-        return actionID;
-    }
-}
-
-internal class DancerLastDanceFeature : CustomCombo
-{
-    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.DancerLastDanceFeature;
-
-    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
-    {
-        if (actionID == DNC.StandardStep)
-        {
-            if (level >= DNC.Levels.LastDance && HasEffect(DNC.Buffs.LastDanceReady))
-            {
-                if (IsEnabled(CustomComboPreset.DancerFinishingMovePriorityFeature) && HasEffect(DNC.Buffs.FinishingMoveReady) && level >= DNC.Levels.FinishingMove)
-                {
-                        return DNC.FinishingMove;
-                }
-
-                return DNC.LastDance;
+                return DNC.FinishingMove;
             }
         }
 
