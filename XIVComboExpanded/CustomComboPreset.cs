@@ -484,62 +484,8 @@ public enum CustomComboPreset
     // ====================================================================================
     #region RED MAGE
 
-    [CustomComboInfo("Verstone/Verfire Feature", "Replace Verstone/Verfire with Jolt when no proc is available.", RDM.JobID)]
-    RedMageVerprocFeature = 3504,
-
-    [CustomComboInfo("Verstone/Verfire Plus Feature", "Replace Verstone/Verfire with Veraero/Verthunder when various instant-cast effects are active.", RDM.JobID)]
-    RedMageVerprocPlusFeature = 3505,
-
-    [ParentCombo(RedMageVerprocPlusFeature)]
-    [CustomComboInfo("Deprioritize Grand Impact", "After using Acceleration, prioritize using Veraero/Verthunder over Grand Impact if both buffs are active.", RDM.JobID)]
-    RedMageGrandImpactDeprioritize = 3517,
-
-    [CustomComboInfo("Verstone/Verfire Plus Opener Feature (Stone)", "Replace Verstone with Veraero when out of combat.", RDM.JobID)]
-    RedMageVerprocOpenerStoneFeature = 3506,
-
-    [CustomComboInfo("Verstone/Verfire Plus Opener Feature (Fire)", "Replace Verfire with Verthunder when out of combat.", RDM.JobID)]
-    RedMageVerprocOpenerFireFeature = 3507,
-
-    [CustomComboInfo("Verstone/Verfire Mana Stacks Feature", "Replace Verstone/Verfire with Verflare/Verholy at 3 mana stacks.", RDM.JobID)]
-    RedMageVerprocManaStacksFeature = 3515,
-
-    [CustomComboInfo("Verstone/Verfire Capstone Combo", "Replace Verstone/Verfire with Scorch and Resolution when available.", RDM.JobID)]
-    RedMageVerprocCapstoneCombo = 3513,
-
-    [CustomComboInfo("Veraero/Verthunder Capstone Combo", "Replace Veraero/Verthunder with Scorch and Resolution when available.", RDM.JobID)]
-    RedMageVeraeroVerthunderCapstoneCombo = 3512,
-
-    [CustomComboInfo("AoE Combo", "Replace Veraero/Verthunder 2 with Impact when various instant-cast effects are active.", RDM.JobID)]
-    RedMageAoEFeature = 3501,
-
-    [CustomComboInfo("AoE Capstone Combo", "Replace Veraero/Verthunder 2 with Scorch and Resolution when available.", RDM.JobID)]
-    RedMageAoECapstoneCombo = 3514,
-
-    [CustomComboInfo("Melee combo", "Replace Redoublement with its combo chain, following enchantment rules.", RDM.JobID)]
-    RedMageMeleeCombo = 3502,
-
-    [CustomComboInfo("Melee Mana Stacks Feature", "Replace Redoublement and Moulinet with Verflare/Verholy at 3 mana stacks, using whichever mana color is lower.", RDM.JobID)]
-    RedMageMeleeManaStacksFeature = 3516,
-
-    [CustomComboInfo("Melee Capstone Combo", "Replace Redoublement and Moulinet with Scorch, Resolution and Prefulgence when available.", RDM.JobID)]
-    RedMageMeleeCapstoneCombo = 3503,
-
-    [CustomComboInfo("Acceleration into Grand Impact", "Replace Acceleration with Grand Impact when available.", RDM.JobID)]
-    RedMageAccelerationGrandImpactFeature = 3518,
-
-    [CustomComboInfo("Acceleration into Swiftcast", "Replace Acceleration with Swiftcast when on cooldown or synced.", RDM.JobID)]
-    RedMageAccelerationSwiftcastFeature = 3509,
-
-    [ParentCombo(RedMageAccelerationSwiftcastFeature)]
-    [CustomComboInfo("Acceleration with Swiftcast first", "Replace Acceleration with Swiftcast when neither are on cooldown.", RDM.JobID)]
-    RedMageAccelerationSwiftcastOption = 3511,
-
-    [CustomComboInfo("Embolden to Manaification", "Replace Embolden with Manafication if the former is on cooldown and the latter is not.", RDM.JobID)]
-    RedMageEmboldenFeature = 3510,
-
-    [SecretCustomCombo]
-    [CustomComboInfo("Contre Sixte / Fleche Feature", "Replace Contre Sixte and Fleche with whichever is available.", RDM.JobID)]
-    RedMageContreFlecheFeature = 3508,
+    [CustomComboInfo("Red Mage one button combo", "Red Mage one button combo", RDM.JobID)]
+    RedMageOneButton = (RDM.JobID * 10000) + 1,
 
     #endregion
     // ====================================================================================
