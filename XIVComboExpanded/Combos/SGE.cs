@@ -276,3 +276,21 @@ internal class SagePhlegma : CustomCombo
         return actionID;
     }
 }
+
+internal class SageCombo : CustomCombo
+{
+    protected internal override CustomComboPreset Preset { get; } = CustomComboPreset.SgeAny;
+
+    protected override uint Invoke(uint actionID, uint lastComboMove, float comboTime, byte level)
+    {
+        var gauge = GetJobGauge<SGEGauge>();
+
+        if (actionID == SGE.Druochole)
+        {
+            if (level >= SGE.Levels.Rhizomata && IsOffCooldown(SGE.Rhizomata) && gauge.Addersgall <= 1)
+                return SGE.Rhizomata;
+        }
+
+        return actionID;
+    }
+}
