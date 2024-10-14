@@ -934,8 +934,8 @@ public enum CustomComboPreset
     // ====================================================================================
     #region VIPER
 
-    [CustomComboInfo("Viper exists!", "No combos planned for now as the job is already combo-heavy. Stay tuned!", VPR.JobID)]
-    ViperDoingNothing = 4100,
+    [CustomComboInfo("Viper one button combo", "Viper one button combo", VPR.JobID)]
+    ViperOneButton = (VPR.JobID * 10000) + 1,
 
     #endregion
     // ====================================================================================
